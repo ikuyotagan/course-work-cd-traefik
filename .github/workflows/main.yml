@@ -33,7 +33,7 @@ jobs:
           port: ${{ secrets.VPS_SSH_PORT }}
           script: |
             cd /home/${{ secrets.VPS_SSH_USERNAME }}/course-work-cd-traefik/
-            wget https://raw.githubusercontent.com/ikuyotagan/course-work-cd-traefik/main/docker-compose.yml
+            wget https://raw.githubusercontent.com/ikuyotagan/course-work-cd-traefik/main/docker-compose.yml -O docker-compose.yml
             echo "Pull new image"
             docker compose -f /home/${{ secrets.VPS_SSH_USERNAME }}/course-work-cd-traefik/docker-compose.yml pull
             echo "Restart the container"
