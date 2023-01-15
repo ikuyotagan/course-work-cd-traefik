@@ -1,0 +1,52 @@
+version: '3'
+
+services:
+
+  reverse-proxy:
+    # The official v2 Traefik docker image
+    image: traefik:v2.9
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    # Enables the web UI and tells Traefik to listen to docker
+    command:
+      - '--providers.docker=true'
+      - '--providers.providersThrottleDuration=2s'
+      - '--providers.docker.watch=true'
+      - '--providers.docker.exposedbydefault=true'
+      # - '--providers.docker.constraints=Label(`traefik.tags`,`public`)'
+      - '--accessLog.bufferingSize=0'
+      - '--api=true'
+      - '--api.dashboard=true'
+      - '--api.insecure=true'
+      - '--metrics.prometheus=true'
+      - '--metrics.prometheus.addEntryPointsLabels=true'
+      - '--metrics.prometheus.addServicesLabels=true'
+      - '--metrics.prometheus.manualrouting=true'
+    ports:
+      # The HTTP ports
+      - "80:80"
+      - "443:443"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # - ./data/traefik.yml:/traefik.yml:ro
+    labels:
+      - traefik.enable=true
+      - traefik.tags=public
+      - traefik.docker.network=traefik
+      - traefik.http.services.prometheus.loadbalancer.server.port=8082
+      - traefik.http.routers.prometheus.rule=PathPrefix(`/metrics`)
+      - traefik.http.routers.prometheus.service=prometheus@internal
+      - traefik.http.routers.prometheus.entrypoints=metrics
+      # - traefik.http.routers.traefik-dashboard.service=traefik-dashboard
+
+  whoami:
+    # A container that exposes an API to show its IP address
+    image: traefik/whoami
+    labels:
+      - "traefik.http.routers.whoami.rule=Host(`whoami.docker.localhost`)"
